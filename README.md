@@ -1,4 +1,4 @@
-# 🎈 Blank app template
+# 🎈 Celestial Impacts
 
 A simple Streamlit app template for you to modify!
 
@@ -10,6 +10,7 @@ A simple Streamlit app template for you to modify!
 
    ```
    $ pip install -r requirements.txt
+   $ pip install matplotlib
    ```
 
 2. Run the app
