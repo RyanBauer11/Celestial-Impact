@@ -237,58 +237,101 @@ def main():
             with colSearch2:
                 st.link_button("View Official Report", link)
 
-        
-        #Set up split screen 
-        col1, col2 = st.columns(2)
+        #Make sure that there is data in the data set
+        if(len(filteredDF)) > 0:
 
-        #on the left
-        with col1:
-            st.subheader("Discovery Timeline: Fell vs. Found")
-            #Set up the pivot table
-            pivotData = filteredDF.pivot_table(
-                index="year",
-                columns="fall",
-                values="id",
-                aggfunc="count",
-                fill_value=0
-            ) + 1 #so 0's don't mess up the log scale
-
-            fig, ax = plt.subplots()
-            #print the chart
-            pivotData.plot(ax=ax)
-            ax.set_yscale("log")
-            ax.set_ylabel("Count (Log Scale)")
-            ax.legend(title=None)
-            st.pyplot(fig)
-            st.caption("Compare observed falls (rare) vs. random finds (common)")
-
-        #on the Right
-        with col2:
-            #Set up pie chart
-            st.subheader("Composition Analysis")
-            classCounts = filteredDF["recclass"].value_counts().to_dict()
-            #Find top 5 classes
-            top5 = dict(list(classCounts.items())[:5])
-            othersCount = sum(list(classCounts.values())[5:])
-            top5["Others"] = othersCount
-            #Print pie chart
-            fig, ax = plt.subplots()
-            ax.pie(top5.values(),labels=top5.keys(),autopct="%1.1f%%")
-            st.pyplot(fig)
-        st.divider()
+            #Set up split screen 
+            col1, col2 = st.columns(2)
 
 
-        #Threat Analysus
-        st.subheader("Threat Analysis")
-        maxMass = filteredDF["mass_g"].max()
-        maxMeteor = filteredDF[filteredDF["mass_g"] == maxMass].iloc[0]
-        st.write(f"The heaviest meteorite in this section is **{maxMeteor['name']}**({maxMass:,.0f} g).")
-        st.write("Kinetic Energy of Top 3 Heaviest:")
-        top3 = filteredDF.head(3)
-        #print out the top 3 and traits
-        for index, row in top3.iterrows():
-            energy, label = calculateThreat(row["mass_g"])
-            st.write(f"- **{row['name']}**: {energy:,.0f} Joules ({label})")
+
+            #on the left
+            with col1:
+                #give 2 options for chart type
+                chartOption = st.radio("Chose Chart Style:", ["2 Seprate Bar Graphs", "Log Scale Line Chart"], horizontal=True)
+
+                #Log Scale
+                if chartOption == "Log Scale Line Chart":
+                    st.subheader("Discovery Timeline: Fell vs. Found")
+                    #Set up the pivot table
+                    pivotData = filteredDF.pivot_table(
+                        index="year",
+                        columns="fall",
+                        values="id",
+                        aggfunc="count",
+                        fill_value=0
+                    ) + 1 #so 0's don't mess up the log scale
+
+                    fig, ax = plt.subplots()
+                    #print the chart
+                    pivotData.plot(ax=ax)
+                    ax.set_yscale("log")
+                    ax.set_ylabel("Count (Log Scale)")
+                    ax.legend(title=None)
+                    st.pyplot(fig)
+                    st.caption("Compare observed falls (rare) vs. random finds (common)")
+                
+                #2 bar Charts
+                else:
+                    st.subheader("Discovery Timeline: Fell vs. Found")
+
+                    # Set up the pivot table
+                    pivotData = filteredDF.pivot_table(
+                        index="year",
+                        columns="fall",
+                        values="id",
+                        aggfunc="count",
+                        fill_value=0
+                    )
+
+                    #Chart of Falls
+                    st.caption("Observed Falls (Rare)")
+                    fig1, ax1 = plt.subplots()
+                        
+                        # Check if data exists to avoid errors
+                    if 'Fell' in pivotData.columns:
+                        ax1.bar(pivotData.index, pivotData['Fell'], color='skyblue')
+                        ax1.set_ylabel("Count")
+                        ax1.set_xlabel("Year")
+                        st.pyplot(fig1)
+
+                    #Chart of Finds
+                    st.caption("Random Finds (Common)")
+                    fig2, ax2 = plt.subplots()
+                    if 'Found' in pivotData.columns:
+                        ax2.bar(pivotData.index, pivotData['Found'], color='orange')        
+                        ax2.set_ylabel("Count")
+                        ax2.set_xlabel("Year")
+                        st.pyplot(fig2)
+
+
+            #on the Right
+            with col2:
+                #Set up pie chart
+                st.subheader("Composition Analysis")
+                classCounts = filteredDF["recclass"].value_counts().to_dict()
+                #Find top 5 classes
+                top5 = dict(list(classCounts.items())[:5])
+                othersCount = sum(list(classCounts.values())[5:])
+                top5["Others"] = othersCount
+                #Print pie chart
+                fig, ax = plt.subplots()
+                ax.pie(top5.values(),labels=top5.keys(),autopct="%1.1f%%")
+                st.pyplot(fig)
+            st.divider()
+
+
+            #Threat Analysus
+            st.subheader("Threat Analysis")
+            maxMass = filteredDF["mass_g"].max()
+            maxMeteor = filteredDF[filteredDF["mass_g"] == maxMass].iloc[0]
+            st.write(f"The heaviest meteorite in this section is **{maxMeteor['name']}**({maxMass:,.0f} g).")
+            st.write("Kinetic Energy of Top 3 Heaviest:")
+            top3 = filteredDF.head(3)
+            #print out the top 3 and traits
+            for index, row in top3.iterrows():
+                energy, label = calculateThreat(row["mass_g"])
+                st.write(f"- **{row['name']}**: {energy:,.0f} Joules ({label})")
 
 
     #Next page
