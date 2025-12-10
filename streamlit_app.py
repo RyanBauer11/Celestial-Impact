@@ -170,7 +170,6 @@ def main():
                           (data["nametype"] == "Valid") &
                           (data["mass_g"] > 0)] #[FILTER2]
 
-
         #If it fell
         if selectedFallFound:
             filteredDF = filteredDF[filteredDF["fall"].isin(selectedFallFound)]#[FILTER1
@@ -186,8 +185,6 @@ def main():
         #Create the map
         st.subheader(f"Global Impact Map ({len(filteredDF)} Meteorites)")
         
-        
-
         layer = pdk.Layer(
             "ScatterplotLayer",
             data=filteredDF,
@@ -245,8 +242,6 @@ def main():
 
             #Set up split screen 
             col1, col2 = st.columns(2)
-
-
 
             #on the left
             with col1:
