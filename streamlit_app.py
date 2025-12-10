@@ -9,7 +9,6 @@ I have not given my code to any student
 """
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import pydeck as pdk
 from collections import Counter
@@ -21,7 +20,7 @@ def loadData():
     df = pd.read_csv("Files/Meteorite_Landings.csv")
 
     #Cleans the data headers so don't get probems 
-    df.columns = [col.lower().replace(" ","_").replace("(","").replace(")","") for col in df.columns]
+    df.columns = [col.lower().replace(" ","_").replace("(","").replace(")","") for col in df.columns] #[LISTCOMP]
 
     #remove incomplete rows
     df = df.dropna(subset=["reclat","reclong","mass_g","year"])
@@ -32,7 +31,7 @@ def loadData():
     return df
 
 #Calculates the kinetic energy of a meteorite returns energy in joules and a classification
-def calculateThreat(massGrams, velocity_kms=15):
+def calculateThreat(massGrams, velocity_kms=15):#[FUNC2P] #[FUNCCALL2] 
     #convert units to those needed for cal
     massKg = massGrams / 1000
     velocity_ms = velocity_kms * 1000
@@ -49,7 +48,7 @@ def calculateThreat(massGrams, velocity_kms=15):
     else:
         intensity = "Minimal"
 
-    return energyJoules , intensity
+    return energyJoules , intensity #[FUNCRETURN2]
 
 #Returns the descritption of the class names
 def getClassDescription(className):
@@ -65,7 +64,7 @@ def getClassDescription(className):
         "CM2": "Carbonaceous Chondrite. Very rare and primitive! These contain water, carbon, and organic compounds from the early solar system.",
         "Iron": "Iron Meteorite. Composed almost entirely of nickel-iron metal. These are likely the cores of dead asteroids that were destroyed."
     }
-    return descriptions.get(className, "A specific classification of meteorite based on its chemical composition and texture.")
+    return descriptions.get(className, "A specific classification of meteorite based on its chemical composition and texture.") #[DICTMETHOD]
 
 #main func that has creates the website
 def main():
@@ -136,9 +135,9 @@ def main():
         )
 
         #Weight Filter
-        minWeight = int(data['mass_g'].min())
+        minWeight = int(data['mass_g'].min())#[MAXMIN]
         maxWeight = int(data['mass_g'].max()) 
-        weightRange = st.sidebar.slider(
+        weightRange = st.sidebar.slider( #[ST2] 
             "Select Range of Weight in Grams",
             min_value= minWeight,
             max_value= maxWeight,
@@ -169,21 +168,25 @@ def main():
         filteredDF = data[(data["year"] >= yearRange[0]) & (data["year"] <= yearRange[1]) &
                           (data["mass_g"] >= weightRange[0]) & (data["mass_g"] <= weightRange[1])&
                           (data["nametype"] == "Valid") &
-                          (data["mass_g"] > 0)]
+                          (data["mass_g"] > 0)] #[FILTER2]
 
 
         #If it fell
         if selectedFallFound:
-            filteredDF = filteredDF[filteredDF["fall"].isin(selectedFallFound)]
+            filteredDF = filteredDF[filteredDF["fall"].isin(selectedFallFound)]#[FILTER1
         #What the class is 
         if selectedClasses:
             filteredDF = filteredDF[filteredDF["recclass"].isin(selectedClasses)]
 
         #Sort the DF
-        filteredDF = filteredDF.sort_values(by="mass_g", ascending=False)
+        filteredDF = filteredDF.sort_values(by="mass_g", ascending=False)#[SORT]
+
+        filteredDF["threatLabel"] = filteredDF["mass_g"].apply(lambda x: calculateThreat(x)[1]) #[COLUMNS] 
         
         #Create the map
         st.subheader(f"Global Impact Map ({len(filteredDF)} Meteorites)")
+        
+        
 
         layer = pdk.Layer(
             "ScatterplotLayer",
@@ -202,12 +205,12 @@ def main():
             zoom=1,
             pitch=0
         )
-        st.pydeck_chart(pdk.Deck(
+        st.pydeck_chart(pdk.Deck(#[MAP]
             map_provider="carto",
             map_style=pdk.map_styles.CARTO_ROAD,
             initial_view_state=viewState,
             layers=[layer],
-            tooltip={"text": "{name}\nMass: {mass_g}g\nYear: {year}\n{fall}\nClass: {recclass}\n"} #tooltips
+            tooltip={"text": "{name}\nMass: {mass_g}g\nYear: {year}\n{fall}\nClass: {recclass}\nThreat level: {threatLabel}"} #tooltips
         ))
         st.divider()
 
@@ -219,12 +222,12 @@ def main():
         meteorite_names = sorted(filteredDF["name"].unique())
         #Create the search box
         # index=None makes it start empty so the user sees the placeholder
-        selected_name = st.selectbox(
+        selected_name = st.selectbox( #[ST1]
             "Search for a meteorite by name:",
             options=meteorite_names,
             index=None,
             placeholder="Type to search:"
-        )
+        ) 
         #Display the link when a user selects a name
         if selected_name:
             row = filteredDF[filteredDF["name"] == selected_name].iloc[0]
@@ -254,7 +257,7 @@ def main():
                 if chartOption == "Log Scale Line Chart":
                     st.subheader("Discovery Timeline: Fell vs. Found")
                     #Set up the pivot table
-                    pivotData = filteredDF.pivot_table(
+                    pivotData = filteredDF.pivot_table( #[PIVOTTABLE]
                         index="year",
                         columns="fall",
                         values="id",
@@ -268,7 +271,7 @@ def main():
                     ax.set_yscale("log")
                     ax.set_ylabel("Count (Log Scale)")
                     ax.legend(title=None)
-                    st.pyplot(fig)
+                    st.pyplot(fig)#[CHART2]
                     st.caption("Compare observed falls (rare) vs. random finds (common)")
                 
                 #2 bar Charts
@@ -311,12 +314,12 @@ def main():
                 st.subheader("Composition Analysis")
                 classCounts = filteredDF["recclass"].value_counts().to_dict()
                 #Find top 5 classes
-                top5 = dict(list(classCounts.items())[:5])
+                top5 = dict(list(classCounts.items())[:5]) 
                 othersCount = sum(list(classCounts.values())[5:])
                 top5["Others"] = othersCount
                 #Print pie chart
                 fig, ax = plt.subplots()
-                ax.pie(top5.values(),labels=top5.keys(),autopct="%1.1f%%")
+                ax.pie(top5.values(),labels=top5.keys(),autopct="%1.1f%%")#[CHART1]
                 st.pyplot(fig)
             st.divider()
 
@@ -329,7 +332,7 @@ def main():
             st.write("Kinetic Energy of Top 3 Heaviest:")
             top3 = filteredDF.head(3)
             #print out the top 3 and traits
-            for index, row in top3.iterrows():
+            for index, row in top3.iterrows(): #[ITERLOOP]
                 energy, label = calculateThreat(row["mass_g"])
                 st.write(f"- **{row['name']}**: {energy:,.0f} Joules ({label})")
 
@@ -351,7 +354,7 @@ def main():
                      "Scientists estimate that about 48.5 tons (44,000 kilograms) of meteoritic material falls on Earth "
                      "each day.(NASA)")
         with col2:
-            st.image("Files/sky.jpg")
+            st.image("Files/sky.jpg") #[ST3] 
             #st.image("Files/ground.jpg")
         st.divider()
 
@@ -362,7 +365,7 @@ def main():
         #get the most common rock classes
         top10Types = data['recclass'].value_counts().head(10)
         #print out the data
-        for type_name, count in top10Types.items():
+        for type_name, count in top10Types.items(): #[DICTMETHOD]
             description = getClassDescription(type_name)
             with st.container():
                 st.subheader(f"{type_name} (Count: {count})")
