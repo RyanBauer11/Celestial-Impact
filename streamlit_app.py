@@ -90,7 +90,7 @@ def main():
             max-width: 60rem; 
             margin: 0 auto;      
             padding: 1rem 1rem;  
-            text-align: left;    
+            text-align: center;    
         }
         
         /* make so does not overlap others */
